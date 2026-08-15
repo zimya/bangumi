@@ -3,6 +3,7 @@ package com.xiaoyv.bangumi.features.main.tab.home.business
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
+import com.xiaoyv.bangumi.shared.core.types.IndexHomepageType
 import com.xiaoyv.bangumi.shared.core.types.SubjectWebPath
 import com.xiaoyv.bangumi.shared.core.types.list.ListBlogType
 import com.xiaoyv.bangumi.shared.core.types.list.ListGroupType
@@ -12,6 +13,7 @@ import com.xiaoyv.bangumi.shared.data.model.emnu.GroupFilterMode
 import com.xiaoyv.bangumi.shared.data.model.request.list.blog.ListBlogParam
 import com.xiaoyv.bangumi.shared.data.model.request.list.group.ListGroupBrowserParam
 import com.xiaoyv.bangumi.shared.data.model.request.list.group.ListGroupParam
+import com.xiaoyv.bangumi.shared.data.model.request.list.index.IndexSearchBody
 import com.xiaoyv.bangumi.shared.data.model.request.list.index.ListIndexParam
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeHomeSection
 import com.xiaoyv.bangumi.shared.data.model.response.bgm.ComposeHomepageCard
@@ -65,12 +67,37 @@ data class HomeState(
     }
 
     @Composable
-    fun rememberListIndexParam(order: String): ListIndexParam {
-        return remember(order) {
-            ListIndexParam(
-                type = ListIndexType.BROWSER,
-                browserOrder = order
-            )
+    fun rememberListIndexParam(
+        order: String,
+        filterType: String = "",
+        filterYear: String = "",
+        filterKeyword: String = "",
+    ): ListIndexParam {
+        return remember(order, filterType, filterYear, filterKeyword) {
+            val hasFilters = filterType.isNotBlank() ||
+                filterYear.isNotBlank() ||
+                filterKeyword.isNotBlank()
+
+            if (hasFilters) {
+                // 最热/最新的筛选在网页目录结果上执行，支持空关键词及类型、时间组合筛选
+                ListIndexParam(
+                    type = ListIndexType.BROWSER,
+                    browserOrder = order,
+                    browserFilter = IndexSearchBody(
+                        keyword = filterKeyword,
+                        exact = false,
+                        order = if (order == IndexHomepageType.HOT) "collects" else "updated_at",
+                        type = filterType,
+                        year = filterYear,
+                    )
+                )
+            } else {
+                // 没有筛选条件时保留网页浏览 API，维持最热/最新原有排序和分页行为
+                ListIndexParam(
+                    type = ListIndexType.BROWSER,
+                    browserOrder = order
+                )
+            }
         }
     }
 

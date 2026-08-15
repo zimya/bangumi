@@ -10,7 +10,12 @@ data class IndexSearchBody(
     @SerialName("keyword") val keyword: String = "",
     @SerialName("exact") val exact: Boolean = false,
     @SerialName("order") val order: String = "updated_at",
+    @SerialName("type") val type: String = "",
+    @SerialName("year") val year: String = "",
 ) {
+    val hasFilters: Boolean
+        get() = keyword.isNotBlank() || type.isNotBlank() || year.isNotBlank()
+
     companion object {
         val Empty = IndexSearchBody()
     }
